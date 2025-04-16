@@ -54,7 +54,21 @@ const getTransactions = async (req, res) => {
     }
 }
 
+const deleteAllTransactions = async (req, res) => {
+    const userId = req.user._id; // Assuming user ID is available in req.user
+
+    try {
+        // Delete all transactions for the user
+        await Transaction.deleteMany({ userId });
+
+        res.status(200).json({ message: "All transactions deleted successfully" });
+    } catch (error) {
+        res.status(500).json({ message: "Server error", error });
+    }
+}
+
 module.exports = {
     createTransaction,
     getTransactions,
+    deleteAllTransactions,
 };
