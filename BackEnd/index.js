@@ -4,6 +4,7 @@ const cors = require("cors");
 const Database = require("./config/db");  // Assuming this is your database connection module
 
 const userRoutes = require("./routes/userRoutes");
+const transactionRoutes = require("./routes/transactionRoutes");  // Assuming this is your transaction routes module
 
 // Load environment variables
 dotenv.config();
@@ -18,6 +19,7 @@ app.use(express.json());  // To parse JSON bodies
 // Define routes
 const routeSetup = () => {
     app.use("/api/v1/user", userRoutes);
+    app.use("/api/v1/transactions", transactionRoutes);
 };
 
 // Database connection (Ensure this is an async function in db.js)
