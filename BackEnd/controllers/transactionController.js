@@ -54,6 +54,51 @@ const getTransactions = async (req, res) => {
     }
 }
 
+const getMonthlyData = async (req, res) => {
+
+    const incomeCategories = ['paycheck', 'otherIncome'];
+
+    const expenseCategories = ["food", "transportation", "entertainment", "utilities", "health", "education", "otherExpense"];
+
+    const userId = req.user._id; // Assuming user ID is available in req.user
+
+    const { month, year } = req.query;
+
+    //default is current month
+    const now = new Date();
+
+    // Convert to numbers
+    const monthInt = parseInt(month) || now.getMonth() + 1;
+    const yearInt = parseInt(year) || now.getFullYear();
+
+    // Start of the month
+    const startDate = new Date(yearInt, monthInt - 1, 1);
+    // End of the month
+    const endDate = new Date(yearInt, monthInt, 1); 
+
+    try {
+        const incomeTransactions = await Transaction.find({
+            userId,
+            date: { $gte: startDate, $lt: endDate },
+            category: { $in: incomeCategories },
+        });
+        const outcomeTransactions = await Transaction.find({
+            userId,
+            date: { $gte: startDate, $lt: endDate },
+            category: { $in: expenseCategories },
+        });
+
+        // Sum it up
+        const monthlyIncome = incomeTransactions.reduce((acc, transaction) => acc + transaction.amount, 0);
+        const monthlyExpense = outcomeTransactions.reduce((acc, transaction) => acc + transaction.amount, 0);
+
+        res.status(200).json({ monthlyIncome, monthlyExpense });
+    } catch (error) {
+        res.status(500).json({ message: "Server error", error });
+    }
+}
+
+
 const deleteAllTransactions = async (req, res) => {
     const userId = req.user._id; // Assuming user ID is available in req.user
 
@@ -71,4 +116,5 @@ module.exports = {
     createTransaction,
     getTransactions,
     deleteAllTransactions,
+    getMonthlyData,
 };
