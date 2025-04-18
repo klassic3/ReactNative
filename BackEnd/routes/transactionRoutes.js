@@ -1,5 +1,5 @@
 const express = require('express');
-const { createTransaction, getTransactions, deleteAllTransactions, getMonthlyData } = require('../controllers/transactionController');
+const { createTransaction, getTransactions, deleteAllTransactions, getMonthlyData, getMonthlyCategories } = require('../controllers/transactionController');
 const { protect } = require('../middlewares/authMiddleware');
 const transactionRouter = express.Router();
 
@@ -11,6 +11,8 @@ transactionRouter.get('/get', protect, getTransactions);
 transactionRouter.delete('/deleteAll', protect, deleteAllTransactions);
 
 transactionRouter.get('/monthlyData', protect, getMonthlyData);
+
+transactionRouter.get('/monthlyCategories', protect, getMonthlyCategories);
 
 
 module.exports = transactionRouter;

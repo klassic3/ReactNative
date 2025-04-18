@@ -46,7 +46,7 @@ const getTransactions = async (req, res) => {
 
     try {
         // Fetch transactions for the user
-        const transactions = await Transaction.find({ userId }).populate("userId", "name email");
+        const transactions = await Transaction.find({ userId }).populate("userId", "name email").sort({ date: -1 });
 
         res.status(200).json(transactions);
     } catch (error) {
@@ -74,7 +74,7 @@ const getMonthlyData = async (req, res) => {
     // Start of the month
     const startDate = new Date(yearInt, monthInt - 1, 1);
     // End of the month
-    const endDate = new Date(yearInt, monthInt, 1); 
+    const endDate = new Date(yearInt, monthInt, 1);
 
     try {
         const incomeTransactions = await Transaction.find({
@@ -98,6 +98,52 @@ const getMonthlyData = async (req, res) => {
     }
 }
 
+const getMonthlyCategories = async (req, res) => {
+    const userId = req.user._id;
+
+    const expenseCategories = ["food", "transportation", "entertainment", "utilities", "health", "education", "otherExpense"];
+
+
+    const { month, year } = req.query;
+
+    const now = new Date();
+    const monthInt = parseInt(month) || now.getMonth() + 1;
+    const yearInt = parseInt(year) || now.getFullYear();
+
+    const startDate = new Date(yearInt, monthInt - 1, 1);
+    const endDate = new Date(yearInt, monthInt, 1);
+
+    try {
+        // 1. Get all matching transactions
+        const transactions = await Transaction.find({
+            userId,
+            date: { $gte: startDate, $lt: endDate },
+            category: { $in: expenseCategories },
+        });
+
+        // 2. Group and sum by category
+        const categoryTotals = {};
+
+        transactions.forEach((tx) => {
+            if (!categoryTotals[tx.category]) {
+                categoryTotals[tx.category] = 0;
+            }
+            categoryTotals[tx.category] += tx.amount;
+        });
+
+        // 3. Format it as an array
+        const result = Object.entries(categoryTotals).map(([category, totalSpent]) => ({
+            category,
+            totalSpent,
+        }));
+
+        res.status(200).json(result);
+    } catch (error) {
+        res.status(500).json({ message: "Server error", error });
+    }
+};
+
+
 
 const deleteAllTransactions = async (req, res) => {
     const userId = req.user._id; // Assuming user ID is available in req.user
@@ -117,4 +163,5 @@ module.exports = {
     getTransactions,
     deleteAllTransactions,
     getMonthlyData,
+    getMonthlyCategories,
 };
