@@ -101,9 +101,6 @@ const getMonthlyData = async (req, res) => {
 const getMonthlyCategories = async (req, res) => {
     const userId = req.user._id;
 
-    const expenseCategories = ["food", "transportation", "entertainment", "utilities", "health", "education", "otherExpense"];
-
-
     const { month, year } = req.query;
 
     const now = new Date();
@@ -114,11 +111,9 @@ const getMonthlyCategories = async (req, res) => {
     const endDate = new Date(yearInt, monthInt, 1);
 
     try {
-        // 1. Get all matching transactions
         const transactions = await Transaction.find({
             userId,
             date: { $gte: startDate, $lt: endDate },
-            category: { $in: expenseCategories },
         });
 
         // 2. Group and sum by category
