@@ -8,6 +8,6 @@ userRouter.post("/register", registerUser);
 userRouter.post("/login", loginUser);
 userRouter.get("/all", getAllUsers);
 userRouter.get("/user", protect, getUser);
-userRouter.get("/resetBalance", protect, resetBalance); // Reset balance route
+userRouter.get("/resetBalance", protect, resetBalance); 
 
 module.exports = userRouter;

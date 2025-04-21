@@ -2,7 +2,7 @@ const Transaction = require("../models/Transaction");
 const User = require("../models/User");
 
 const createTransaction = async (req, res) => {
-    const { title, description, category, amount } = req.body;
+    const { title, description, category, amount, date } = req.body;
     userId = req.user._id; // Assuming user ID is available in req.user
 
     try {
@@ -24,6 +24,7 @@ const createTransaction = async (req, res) => {
             description,
             category,
             amount,
+            date
         });
 
         await newTransaction.save();
@@ -138,7 +139,58 @@ const getMonthlyCategories = async (req, res) => {
     }
 };
 
+const getMonthlyTrends = async (req, res) => {
+    const userId = req.user._id; // Assuming user ID is available in req.user
 
+    const expenseCategories = ["food", "transportation", "entertainment", "utilities", "health", "education", "otherExpense"];
+
+    const { month, year } = req.query;
+
+    const now = new Date();
+    const monthInt = parseInt(month) || now.getMonth() + 1;
+    const yearInt = parseInt(year) || now.getFullYear();
+
+    const startDate = new Date(yearInt, monthInt - 6, 1);
+    const endDate = new Date(yearInt, monthInt, 1);
+
+    try {
+        const transactions = await Transaction.find({
+            userId,
+            date: { $gte: startDate, $lt: endDate },
+            category: { $in: expenseCategories },
+        });
+
+        const months = [];
+        for (let i = -6; i < 0; i++) { // Loop from -5 (5 months ago) to 0 (current month)
+            const monthDate = new Date(yearInt, monthInt + i, 1); // Generate month-by-month dates
+            months.push(monthDate.toLocaleString('default', { month: 'long' }));
+        }
+
+        const monthlyTotals = {};
+
+        months.forEach(month => {
+            monthlyTotals[month] = 0; // Set each month to 0 initially
+        });
+
+        transactions.forEach(tx => {
+            const txDate = new Date(tx.date);
+            const monthName = txDate.toLocaleString('default', { month: 'long' });
+            
+            if (monthlyTotals[monthName] !== undefined) {
+                monthlyTotals[monthName] += tx.amount;
+            }
+        });
+
+        const result = months.map(month => ({
+            month,
+            totalSpent: monthlyTotals[month],
+        }));
+
+        res.status(200).json(result);
+    } catch (error) {
+        res.status(500).json({ message: "Server error", error });
+    }
+}
 
 const deleteAllTransactions = async (req, res) => {
     const userId = req.user._id; // Assuming user ID is available in req.user
@@ -159,4 +211,5 @@ module.exports = {
     deleteAllTransactions,
     getMonthlyData,
     getMonthlyCategories,
+    getMonthlyTrends,
 };

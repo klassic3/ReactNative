@@ -10,8 +10,6 @@ const protect = (req, res, next) => {
     if (!token) {
         return res.status(401).json({ message: 'Not authorized, no token' });
     }
-    console.log(token);
-
     try {
 
         // Verify the token using the secret stored in .env
