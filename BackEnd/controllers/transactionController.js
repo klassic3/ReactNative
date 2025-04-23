@@ -99,6 +99,39 @@ const getMonthlyData = async (req, res) => {
     }
 }
 
+const getFilteredTransactions = async (req, res) => {
+    const userId = req.user._id;
+
+    const categories = req.query.category ? req.query.category.split(',') : [];
+    const startDate = req.query.startDate;
+    const endDate = req.query.endDate;
+
+    const filter = { userId };
+
+    if (categories.length > 0) {
+        filter['category'] = { $in: categories };
+    }
+
+    if (startDate || endDate) {
+        filter['date'] = {};
+        if (startDate) {
+            filter.date.$gte = new Date(startDate);
+        }
+        if (endDate) {
+            filter.date.$lte = new Date(endDate);
+        }
+    }
+
+    try {
+        const transactions = await Transaction.find(filter).sort({ date: -1 });
+
+        res.status(200).json({ transactions });
+
+    } catch (error) {
+        res.status(500).json({ message: "Server error", error });
+    }
+}
+
 const getMonthlyCategories = async (req, res) => {
     const userId = req.user._id;
 
@@ -175,7 +208,7 @@ const getMonthlyTrends = async (req, res) => {
         transactions.forEach(tx => {
             const txDate = new Date(tx.date);
             const monthName = txDate.toLocaleString('default', { month: 'long' });
-            
+
             if (monthlyTotals[monthName] !== undefined) {
                 monthlyTotals[monthName] += tx.amount;
             }
@@ -208,6 +241,7 @@ const deleteAllTransactions = async (req, res) => {
 module.exports = {
     createTransaction,
     getTransactions,
+    getFilteredTransactions,
     deleteAllTransactions,
     getMonthlyData,
     getMonthlyCategories,
