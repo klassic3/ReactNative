@@ -1,11 +1,12 @@
 const express = require('express');
-const { createTransaction, getTransactions, deleteAllTransactions, getMonthlyData, getMonthlyCategories, getMonthlyTrends, getFilteredTransactions } = require('../controllers/transactionController');
+const { createTransaction, getTransactions, deleteAllTransactions, getMonthlyData, getMonthlyCategories, getMonthlyTrends, getFilteredTransactions, deleteTransaction } = require('../controllers/transactionController');
 const { protect } = require('../middlewares/authMiddleware');
 const transactionRouter = express.Router();
 
-// Route to create a new transaction
 transactionRouter.post('/create', protect, createTransaction);
-// Route to get all transactions for the logged-in user
+
+transactionRouter.delete('/delete/:id', protect, deleteTransaction);
+
 transactionRouter.get('/get', protect, getTransactions);
 
 transactionRouter.get('/filter',protect, getFilteredTransactions);

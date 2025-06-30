@@ -42,6 +42,29 @@ const createTransaction = async (req, res) => {
     }
 }
 
+const deleteTransaction = async (req, res) => {
+    const transactionId = req.params.id; 
+    const userId = req.user._id; 
+    try {
+        const transaction = await Transaction.findOne({ _id: transactionId, userId });
+        if (!transaction) {
+            return res.status(404).json({ message: "Transaction not found." });
+        }
+
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: "User not found." });
+        }
+
+        user.balance -= transaction.amount;
+        await user.save();
+        await Transaction.deleteOne({ _id: transactionId, userId });
+        res.status(200).json({ message: "Transaction deleted successfully." });
+    } catch (error) {
+        res.status(500).json({ message: "Server error", error });
+    }
+}
+
 const getTransactions = async (req, res) => {
     const userId = req.user._id; // Assuming user ID is available in req.user
 
@@ -240,6 +263,7 @@ const deleteAllTransactions = async (req, res) => {
 
 module.exports = {
     createTransaction,
+    deleteTransaction,
     getTransactions,
     getFilteredTransactions,
     deleteAllTransactions,
