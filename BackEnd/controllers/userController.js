@@ -69,6 +69,30 @@ const loginUser = async (req, res) => {
     }
 }
 
+const changePassword = async (req, res) => {
+    const { currentPassword, newPassword } = req.body;
+    const userId = req.user._id; 
+    try {
+        if (!currentPassword || !newPassword) {
+            return res.status(400).json({ message: "Fields empty." });
+        }
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        const isMatch = await bcrypt.compare(currentPassword, user.password);
+        if (!isMatch) {
+            return res.status(401).json({ message: "Password is incorrect" });
+        }
+        const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+        user.password = hashedNewPassword;
+        await user.save();
+        res.status(200).json({ message: "Password changed successfully" });
+    } catch (error) {
+        res.status(500).json({ message: "Server error", error });
+    }
+}
+
 const getAllUsers = async (req, res) => {
     try {
         const users = await User.find();
@@ -110,6 +134,7 @@ const resetBalance = async (req, res) => {
 module.exports = {
     registerUser,
     loginUser,
+    changePassword,
     getAllUsers,
     getUser,
     resetBalance,
